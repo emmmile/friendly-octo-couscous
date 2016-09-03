@@ -1,5 +1,6 @@
 #! /usr/bin/env python3
 
+import collections
 import hashlib
 import httpcache
 import logging
@@ -36,12 +37,12 @@ def save_page_in(path, filename, uri, content):
 # modified state. The machine is then executed by the Machine class.
 class State:
     BASE_URI = sys.argv[1]
-    SLEEP = 64
+    SLEEP = int(sys.argv[2])
 
     session = None
     response = None
     previous = None
-    hashes = set()
+    hashes = collections.deque(maxlen=1024*1024)
 
 
 class Machine:
@@ -70,11 +71,12 @@ def fetch_index(state):
 # check if the content of the page is changed or not
 def check_source(state):
     if not state.previous or state.response.text != state.previous.text:
-        current_hash = hashlib.md5(state.response.text.encode('utf-8'))
+        current_hash = hashlib.md5(state.response.text.encode('utf-8')).hexdigest()
         if current_hash in state.hashes:
             logging.warning("Page changed but content is not new")
 
-        state.hashes.add(current_hash)
+        logging.info(state.hashes)
+        state.hashes.append(current_hash)
         state.previous = state.response
         logging.info("Page changed")
         return save_content
