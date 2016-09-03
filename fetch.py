@@ -92,7 +92,7 @@ def save_content(state):
 
     dom = lxml.html.fromstring(state.response.text)
     for link in dom.xpath(xpath_for_class('subpage-content') + '//a/@href'):
-        link_response = get_page_by_uri(state.session, link, 0)
+        link_response = get_page_by_uri(state.session, link)
         save_page_in(path, "child.html", link, link_response.text)
 
     return sleep
