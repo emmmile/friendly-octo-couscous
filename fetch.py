@@ -26,7 +26,7 @@ def xpath_for_class(name):
     return "//*[contains(concat(' ', normalize-space(@class), ' '), ' " + name + "')]"
 
 
-def save_page_in(path, filename, uri, content):
+def save_page_in(path, filename, content):
     full_path = os.path.join(path, filename)
     with open(full_path, 'w') as output:
         output.write(content)
@@ -88,12 +88,12 @@ def save_content(state):
     path = 'output/' + time.strftime('%Y%m%d-%H:%M:%S', time.gmtime(time.time()))
     os.makedirs(path)
     logging.info("Saving page content in %s/", path)
-    save_page_in(path, "main.html", state.BASE_URI, state.response.text)
+    save_page_in(path, "main.html", state.response.text)
 
     dom = lxml.html.fromstring(state.response.text)
     for link in dom.xpath(xpath_for_class('subpage-content') + '//a/@href'):
         link_response = get_page_by_uri(state.session, link)
-        save_page_in(path, "child.html", link, link_response.text)
+        save_page_in(path, "child.html", link_response.text)
 
     return sleep
 
