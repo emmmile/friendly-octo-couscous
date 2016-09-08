@@ -77,7 +77,6 @@ def check_source(state):
         if current_hash in state.hashes:
             logging.warning("Page changed but content is not new")
 
-        logging.info(state.hashes)
         state.hashes.append(current_hash)
         state.previous = state.response
         logging.info("Page changed")
