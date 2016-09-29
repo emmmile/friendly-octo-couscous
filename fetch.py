@@ -54,11 +54,11 @@ def fetch_index(state):
 # check if the content of the page is changed or not
 def check_source(state):
     if not state.previous or state.response.text != state.previous.text:
-        current_hash = hash(state.response.text)
-        if current_hash in state.hashes:
-            logging.warning("Page changed but content is not new")
+        # current_hash = hash(state.response.text)
+        # if current_hash in state.hashes:
+        #     logging.warning("Page changed but content is not new")
 
-        state.hashes.append(current_hash)
+        # state.hashes.append(current_hash)
         state.previous = state.response
         logging.info("Page changed")
         return [(get_content, state)]
@@ -86,7 +86,7 @@ def get_content(state):
             link_response = utils.get_page_by_uri(state.session, link)
             save_page_in(path, "child-" + str(index) + ".html", link_response.text)
 
-        transitions = []
+        transitions = [(maybe_fill_form, state)]
 
     return transitions + [(sleep, state)]
 
