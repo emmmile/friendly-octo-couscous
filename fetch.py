@@ -15,11 +15,13 @@ import utils
 # Every function takes a state and returns a new function to execute on the
 # modified state. The machine is then executed by the Machine class.
 class State:
-    def __init__(self, uri, sleep, element):
+    def __init__(self, uri, sleep, element, data_dir):
         self.uri = uri
         self.sleep = sleep
         self.element = element
+        self.data_dir = data_dir
 
+    data_dir = None
     session = None
     response = None
     previous = None
@@ -32,6 +34,22 @@ class Machine:
         while len(events) > 0:
             (f, *args) = events.pop(0)
             events.extend(f(*args))
+
+
+def init(state):
+    if not os.path.exists(state.data_dir):
+        os.makedirs(state.data_dir)
+
+    formatter = logging.Formatter('%(asctime)s %(levelname)-7s %(message)s')
+    root = logging.getLogger()
+    root.setLevel(logging.DEBUG)
+    fh = logging.FileHandler(state.data_dir + "fetch.log")
+    ch = logging.StreamHandler(sys.stdout)
+    fh.setFormatter(formatter)
+    ch.setFormatter(formatter)
+    root.addHandler(fh)
+    root.addHandler(ch)
+    return [(create_session, state)]
 
 
 def create_session(state):
@@ -54,11 +72,6 @@ def fetch_index(state):
 # check if the content of the page is changed or not
 def check_source(state):
     if not state.previous or state.response.text != state.previous.text:
-        # current_hash = hash(state.response.text)
-        # if current_hash in state.hashes:
-        #     logging.warning("Page changed but content is not new")
-
-        # state.hashes.append(current_hash)
         state.previous = state.response
         logging.info("Page changed")
         return [(get_content, state)]
@@ -68,7 +81,7 @@ def check_source(state):
 
 # save the page and some interesting links on disk
 def get_content(state):
-    path = 'data/' + time.strftime('%Y%m%d-%H:%M:%S', time.gmtime(time.time()))
+    path = state.data_dir + time.strftime('%Y%m%d-%H:%M:%S', time.gmtime(time.time()))
     dom = lxml.html.fromstring(state.response.text)
     childs = dom.xpath(utils.xpath_for_class(state.element) + '//h3/a/@href')
 
@@ -123,20 +136,12 @@ def sleep(state):
 
 
 def main():
-    formatter = logging.Formatter('%(asctime)s %(levelname)-7s %(message)s')
-    root = logging.getLogger()
-    root.setLevel(logging.DEBUG)
-    fh = logging.FileHandler("fetch.log")
-    ch = logging.StreamHandler(sys.stdout)
-    fh.setFormatter(formatter)
-    ch.setFormatter(formatter)
-    root.addHandler(fh)
-    root.addHandler(ch)
-
     uri = sys.argv[1]
     sleep = int(sys.argv[2])
     element = sys.argv[3]
-    Machine([(create_session, State(uri, sleep, element))])
+    data_dir = 'data/'
+
+    Machine([(init, State(uri, sleep, element, data_dir))])
 
 
 if __name__ == '__main__':
