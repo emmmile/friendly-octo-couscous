@@ -8,7 +8,7 @@ import os
 import requests
 import sys
 import time
-import urllib
+
 import utils
 
 # This code emulates a state machine.
@@ -30,8 +30,8 @@ class State:
 class Machine:
     def __init__(self, events):
         while len(events) > 0:
-            (f, state) = events.pop(0)
-            events.extend(f(state))
+            (f, *args) = events.pop(0)
+            events.extend(f(*args))
 
 
 def create_session(state):
@@ -72,23 +72,49 @@ def get_content(state):
     dom = lxml.html.fromstring(state.response.text)
     childs = dom.xpath(utils.xpath_for_class(state.element) + '//h3/a/@href')
 
-    transitions = []
     if len(childs) > 0:
         os.makedirs(path)
         logging.info("Saving page content in %s/", path)
         utils.save_page_in(path, "main.html", state.response.text)
 
-        for index, link in enumerate(childs):
-            if 'http://' not in link:
-                link = urllib.parse.urljoin(state.uri, link)
+        absolute_uris = [utils.absolute_uri(state.uri, u) for u in childs]
+        return [(process_pages, state, path, absolute_uris)]
 
-            # TODO if the link is broken???
-            link_response = utils.get_page_by_uri(state.session, link)
-            utils.save_page_in(path, "child-" + str(index) + ".html", link_response.text)
+    return [(sleep, state)]
 
-        transitions = [(maybe_fill_form, state)]
 
-    return transitions + [(sleep, state)]
+# save and eventually send the form for a set of interesting pages
+def process_pages(state, path, uris):
+    # If the link is broken or there is a 500 from the server?
+    # get_page_by_uri should be quite robust because retries
+    contents = [utils.get_page_by_uri(state.session, u).text for u in uris]
+    names = ["child-" + str(i) + ".html" for i in range(len(contents))]
+
+    # Save all the stuff in the data directory
+    for name, uri, content in zip(names, uris, contents):
+        logging.info("Saving page %s in %s/%s", uri, path, name)
+        utils.save_page_in(path, name, content)
+
+    return [(maybe_fill_forms, state, uris, contents)]
+
+
+def maybe_fill_forms(state, uris, contents):
+    for uri, content in zip(uris, contents):
+        dom = lxml.html.fromstring(content)
+        if not dom.forms:
+            logging.error("Page %s has no forms", uri)
+            continue
+
+        form = dom.forms[0]
+        current_hash = hash(frozenset(form.fields))
+        if current_hash not in state.hashes:
+            logging.info("Filling and sending form for page %s", uri)
+            state.hashes.append(current_hash)
+            response = utils.fill_form_and_send(form)
+            if response:
+                logging.info("Received %s", str(response))
+
+    return [(sleep, state)]
 
 
 def sleep(state):
