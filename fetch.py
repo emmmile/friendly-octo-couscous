@@ -76,7 +76,7 @@ def get_content(state):
     if len(childs) > 0:
         os.makedirs(path)
         logging.info("Saving page content in %s/", path)
-        save_page_in(path, "main.html", state.response.text)
+        utils.save_page_in(path, "main.html", state.response.text)
 
         for index, link in enumerate(childs):
             if 'http://' not in link:
@@ -84,7 +84,7 @@ def get_content(state):
 
             # TODO if the link is broken???
             link_response = utils.get_page_by_uri(state.session, link)
-            save_page_in(path, "child-" + str(index) + ".html", link_response.text)
+            utils.save_page_in(path, "child-" + str(index) + ".html", link_response.text)
 
         transitions = [(maybe_fill_form, state)]
 
