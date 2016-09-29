@@ -9,6 +9,7 @@ import requests
 import sys
 import time
 
+import html_logging
 import utils
 
 # This code emulates a state machine.
@@ -44,10 +45,13 @@ def init(state):
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
     fh = logging.FileHandler(state.data_dir + "fetch.log")
+    hh = html_logging.HTMLFileHandler('Log', '1.0.0', state.data_dir + "fetch.log.html")
     ch = logging.StreamHandler(sys.stdout)
     fh.setFormatter(formatter)
     ch.setFormatter(formatter)
+    hh.setFormatter(html_logging.HTMLFormatter())
     root.addHandler(fh)
+    root.addHandler(hh)
     root.addHandler(ch)
     return [(create_session, state)]
 
