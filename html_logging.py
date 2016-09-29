@@ -63,7 +63,7 @@ _END_OF_DOC_FMT = """</table>
 
 _MSG_FMT = """
 <tr>
-<td width="200">%(time)s</td>
+<td width="300">%(time)s</td>
 <td class="%(class)s"><pre>%(msg)s</pre></td>
 <tr>
 """
@@ -106,11 +106,11 @@ class HTMLFormatter(logging.Formatter):
         except KeyError:
             class_name = "info"
 
-        t = time.time() - self._start_time
+        t = time.time()
 
         # handle '<' and '>' (typically when logging %r)
         msg = record.msg % record.args
         msg = msg.replace("<", "&#60")
         msg = msg.replace(">", "&#62")
 
-        return _MSG_FMT % {"class": class_name, "time": "%.4f" % t, "msg": msg}
+        return _MSG_FMT % {"class": class_name, "time": time.asctime(time.localtime()), "msg": msg}
