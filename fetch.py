@@ -129,7 +129,10 @@ def maybe_fill_forms(state, uris, contents):
             state.hashes.append(current_hash)
             response = utils.fill_form_and_send(form)
             if response:
-                logging.info("Received %s", str(response))
+                parsed = parse(response)
+                logging.info("Received %s", str(parsed))
+            else:
+                logging.error("Received no response.")
 
     return [(sleep, state)]
 

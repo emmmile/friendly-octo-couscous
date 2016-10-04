@@ -3,6 +3,7 @@
 import os
 import retrying
 import urllib
+import lxml.html
 import logging
 
 import info
@@ -39,6 +40,6 @@ def absolute_uri(base_uri, link):
 def fill_form_and_send(form):
     try:
         form.fields.update(info.form_data)
-        return form.submit()
+        return lxml.html.submit_form(form)
     except KeyError:
         logging.error("Key not present in form. Maybe format has changed.")
