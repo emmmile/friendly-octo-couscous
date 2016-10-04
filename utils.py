@@ -36,7 +36,7 @@ def absolute_uri(base_uri, link):
         return link
 
 
-# @retrying.retry(stop_max_attempt_number=8, wait_exponential_multiplier=1000, wait_exponential_max=64000)
+@retrying.retry(stop_max_attempt_number=4, wait_exponential_multiplier=1000, wait_exponential_max=64000)
 def fill_form_and_send(form):
     try:
         form.fields.update(info.form_data)
