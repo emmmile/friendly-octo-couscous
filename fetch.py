@@ -134,12 +134,14 @@ def maybe_fill_forms(state, uris, contents):
             state.hashes.append(current_hash)
             response = utils.fill_form_and_send(state.session, state.uri, form)
             if not response:
-                logging.error("Received no response.")
+                logging.error("Received no response")
                 continue
 
-            logging.info("Received %s", response.status_code)
+            logging.info("Received code %s", response.status_code)
             if response.status_code != 200:
-                logging.error("Response code: %s", response.text)
+                logging.error("Response: %s", response.text)
+        else:
+            logging.info("Page already seen, not sending form")
 
     return [(sleep, state)]
 
