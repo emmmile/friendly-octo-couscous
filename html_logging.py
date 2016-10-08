@@ -78,6 +78,7 @@ class HTMLFileHandler(logging.handlers.RotatingFileHandler):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         assert self.stream is not None
+        self.stream.write(_START_OF_DOC_FMT)
 
     def close(self):
         # finish document
