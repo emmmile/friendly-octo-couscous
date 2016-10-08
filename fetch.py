@@ -127,12 +127,14 @@ def maybe_fill_forms(state, uris, contents):
         if current_hash not in state.hashes:
             logging.info("Filling and sending form for page %s", uri)
             state.hashes.append(current_hash)
-            response = utils.fill_form_and_send(form)
-            if response:
-                parsed = parse(response)
-                logging.info("Received %s", str(parsed))
-            else:
+            response = utils.fill_form_and_send(state.session, state.uri, form)
+            if not response:
                 logging.error("Received no response.")
+                continue
+
+            logging.info("Received %s", response.status_code)
+            if response.status_code != 200:
+                logging.error("Response code: %s", response.text)
 
     return [(sleep, state)]
 
@@ -149,6 +151,9 @@ def main():
     data_dir = 'data/'
 
     Machine([(init, State(uri, sleep, element, data_dir))])
+    # create_session(State(uri, sleep, element, data_dir))
+    # data = open('example-page.html').read()
+    # maybe_fill_forms(state, ["fake-uri"], [data])
 
 
 if __name__ == '__main__':
