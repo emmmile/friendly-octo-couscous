@@ -5,6 +5,7 @@ Usage:
  - call dbg, info, warn or err to log messages.
 """
 import logging
+import logging.handlers
 import time
 
 #: HTML header (starts the document
@@ -69,16 +70,14 @@ _MSG_FMT = """
 """
 
 
-class HTMLFileHandler(logging.FileHandler):
+class HTMLFileHandler(logging.handlers.RotatingFileHandler):
     """
     File handler specialised to write the start of doc as html and to close it
     properly.
     """
-    def __init__(self, title, version, *args):
-        super().__init__(*args)
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         assert self.stream is not None
-        # Write header
-        self.stream.write(_START_OF_DOC_FMT % {"title": title, "version": version})
 
     def close(self):
         # finish document

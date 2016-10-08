@@ -3,6 +3,7 @@
 import collections
 import httpcache
 import logging
+import logging.handlers
 import lxml.html
 import os
 import requests
@@ -44,8 +45,12 @@ def init(state):
     formatter = logging.Formatter('%(asctime)s %(levelname)-7s %(message)s')
     root = logging.getLogger()
     root.setLevel(logging.DEBUG)
-    fh = logging.FileHandler(state.data_dir + "fetch.log")
-    hh = html_logging.HTMLFileHandler('Log', '1.0.0', state.data_dir + "fetch.log.html")
+    fh = logging.handlers.RotatingFileHandler(state.data_dir + "fetch.log",
+                                              maxBytes=1024 * 1024,
+                                              backupCount=1)
+    hh = html_logging.HTMLFileHandler(state.data_dir + "fetch.log.html",
+                                      maxBytes=1024 * 256,
+                                      backupCount=1)
     ch = logging.StreamHandler(sys.stdout)
     fh.setFormatter(formatter)
     ch.setFormatter(formatter)
