@@ -128,7 +128,8 @@ def maybe_fill_forms(state, uris, contents):
             continue
 
         form = dom.forms[0]
-        current_hash = hash(frozenset(form.fields))
+        values = [x[1] for x in form.form_values()]
+        current_hash = hash(frozenset(values))
         if current_hash not in state.hashes:
             logging.info("Filling and sending form for page %s", uri)
             state.hashes.append(current_hash)
@@ -141,7 +142,7 @@ def maybe_fill_forms(state, uris, contents):
             if response.status_code != 200:
                 logging.error("Response: %s", response.text)
         else:
-            logging.info("Page already seen, not sending form")
+            logging.info("Page already seen, not sending form (hash: %d)", current_hash)
 
     return [(sleep, state)]
 
@@ -158,9 +159,11 @@ def main():
     data_dir = 'data/'
 
     Machine([(init, State(uri, sleep, element, data_dir))])
-    # create_session(State(uri, sleep, element, data_dir))
+    # state = State(uri, sleep, element, data_dir)
+    # init(state)
+    # create_session(state)
     # data = open('example-page.html').read()
-    # maybe_fill_forms(state, ["fake-uri"], [data])
+    # maybe_fill_forms(state, ["uri"], [data])
 
 
 if __name__ == '__main__':
